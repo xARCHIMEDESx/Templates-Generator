@@ -17,7 +17,7 @@ _Here is an example_:
 In `\<dependencies\>` block you need to add the dependency
 ```xml
 <dependency>
-    <groupId>com.xarchimedesx.util</groupId>
+    <groupId>com.xarchimedesx</groupId>
     <artifactId>templates-generator</artifactId>
     <version>${templates-generator.version}</version>
 </dependency>
@@ -38,7 +38,7 @@ and then launch it at needed phase using `exec-maven-plugin` in `\<build\>` sect
                         <goal>java</goal>
                     </goals>
                     <configuration>
-                        <mainClass>com.xarchimedesx.util.templatesgenerator.TemplatesGenerator</mainClass>
+                        <mainClass>com.xarchimedesx.templatesgenerator.TemplatesGenerator</mainClass>
                         <arguments>
                             <argument>--template</argument>
                             <argument>path/to/*.vm</argument>

@@ -1,4 +1,4 @@
-package com.xarchimedesx.util.templatesgenerator.exception;
+package com.xarchimedesx.templatesgenerator.exception;
 
 import org.apache.velocity.exception.VelocityException;
 

@@ -1,6 +1,6 @@
-package com.xarchimedesx.util.templatesgenerator.directive;
+package com.xarchimedesx.templatesgenerator.directive;
 
-import com.xarchimedesx.util.templatesgenerator.exception.RenderingException;
+import com.xarchimedesx.templatesgenerator.exception.RenderingException;
 
 import org.apache.velocity.context.InternalContextAdapter;
 import org.apache.velocity.runtime.directive.Directive;

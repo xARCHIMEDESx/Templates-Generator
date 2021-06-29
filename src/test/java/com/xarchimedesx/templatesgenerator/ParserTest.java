@@ -1,6 +1,6 @@
-package com.xarchimedesx.util.templatesgenerator;
+package com.xarchimedesx.templatesgenerator;
 
-import com.xarchimedesx.util.templatesgenerator.cli.Parser;
+import com.xarchimedesx.templatesgenerator.cli.Parser;
 
 import org.apache.commons.cli.CommandLine;
 import org.junit.jupiter.api.Assertions;

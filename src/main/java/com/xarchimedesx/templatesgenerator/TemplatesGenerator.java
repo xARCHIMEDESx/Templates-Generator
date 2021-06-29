@@ -1,8 +1,8 @@
-package com.xarchimedesx.util.templatesgenerator;
+package com.xarchimedesx.templatesgenerator;
 
-import com.xarchimedesx.util.templatesgenerator.cli.Parser;
-import com.xarchimedesx.util.templatesgenerator.directive.SaveFileDirective;
-import com.xarchimedesx.util.templatesgenerator.reader.ContextVariablesReader;
+import com.xarchimedesx.templatesgenerator.cli.Parser;
+import com.xarchimedesx.templatesgenerator.directive.SaveFileDirective;
+import com.xarchimedesx.templatesgenerator.reader.ContextVariablesReader;
 
 import java.io.IOException;
 import java.io.StringWriter;

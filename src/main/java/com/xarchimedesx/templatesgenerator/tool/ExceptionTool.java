@@ -1,6 +1,6 @@
-package com.xarchimedesx.util.templatesgenerator.tool;
+package com.xarchimedesx.templatesgenerator.tool;
 
-import com.xarchimedesx.util.templatesgenerator.exception.RenderingException;
+import com.xarchimedesx.templatesgenerator.exception.RenderingException;
 
 import org.apache.velocity.tools.config.DefaultKey;
 

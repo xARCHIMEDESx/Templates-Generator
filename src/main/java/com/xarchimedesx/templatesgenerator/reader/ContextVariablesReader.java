@@ -1,4 +1,4 @@
-package com.xarchimedesx.util.templatesgenerator.reader;
+package com.xarchimedesx.templatesgenerator.reader;
 
 import java.io.BufferedInputStream;
 import java.io.File;

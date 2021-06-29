@@ -1,4 +1,4 @@
-package com.xarchimedesx.util.templatesgenerator.cli;
+package com.xarchimedesx.templatesgenerator.cli;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;

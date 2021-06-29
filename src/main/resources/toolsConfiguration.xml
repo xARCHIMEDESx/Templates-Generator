@@ -21,7 +21,7 @@
     <data type="number" key="TOOLS_VERSION" value="3.0"/>
     <data type="boolean" key="GENERIC_TOOLS_AVAILABLE" value="true"/>
     <toolbox scope="application">
-        <tool class="com.xarchimedesx.util.templatesgenerator.tool.ExceptionTool"/>
+        <tool class="com.xarchimedesx.templatesgenerator.tool.ExceptionTool"/>
         <tool class="org.apache.velocity.tools.generic.ClassTool"/>
         <tool class="org.apache.velocity.tools.generic.CollectionTool"/>
         <tool class="org.apache.velocity.tools.generic.ComparisonDateTool"/>

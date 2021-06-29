@@ -1,6 +1,6 @@
-package com.xarchimedesx.util.templatesgenerator;
+package com.xarchimedesx.templatesgenerator;
 
-import com.xarchimedesx.util.templatesgenerator.reader.ContextVariablesReader;
+import com.xarchimedesx.templatesgenerator.reader.ContextVariablesReader;
 
 import java.util.AbstractMap;
 import java.util.Map;
