@@ -1,0 +1,16 @@
+#saveFile( "${outputDirBasePath}/test-data/rendered.json" )
+#set( $comma = ',' )
+{
+  "usersAmount": $users.size(),
+  "users": [
+    #foreach( $user in $users )
+    {
+      "ID": "$user.id",
+      "Name": "$user.personal.name",
+      "Surname": "$user.personal.surname",
+      "Age": $user.personal.age
+    }#if($foreach.hasNext)$comma#end
+    #end
+  ]
+}
+#end

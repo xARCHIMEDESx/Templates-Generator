@@ -1,0 +1,11 @@
+users:
+  - id: 001
+    personal:
+      age: 26
+      name: John
+      surname: Doe
+  - id: 002
+    personal:
+      age: 28
+      name: Jane
+      surname: Doe

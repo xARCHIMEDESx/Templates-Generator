@@ -1,0 +1,17 @@
+{
+  "usersAmount": 2,
+  "users": [
+    {
+      "ID": "1",
+      "Name": "John",
+      "Surname": "Doe",
+      "Age": 26
+    },
+    {
+      "ID": "2",
+      "Name": "Jane",
+      "Surname": "Doe",
+      "Age": 28
+    }
+  ]
+}
