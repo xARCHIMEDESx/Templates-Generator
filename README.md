@@ -14,7 +14,7 @@ The util can be launched via `java -jar` command with mentioned args or even fro
 
 _Here is an example_:
 
-In `\<dependencies\>` block you need to add the dependency
+In `<dependencies\>` block you need to add the dependency
 ```xml
 <dependency>
     <groupId>com.xarchimedesx</groupId>
@@ -22,7 +22,7 @@ In `\<dependencies\>` block you need to add the dependency
     <version>${templates-generator.version}</version>
 </dependency>
 ```
-and then launch it at needed phase using `exec-maven-plugin` in `\<build\>` section:
+and then launch it at needed phase using `exec-maven-plugin` in `<build\>` section:
 ```xml
 <build>
     <plugins>
