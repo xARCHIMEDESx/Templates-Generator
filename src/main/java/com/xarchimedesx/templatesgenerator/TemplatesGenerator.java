@@ -32,17 +32,16 @@ public class TemplatesGenerator {
   private static final String OUTPUT_DIR_BASE_PATH_REFERENCE_NAME = "outputDirBasePath";
 
   public static void main(String[] args) {
-    new TemplatesGenerator(args);
-  }
-
-  public TemplatesGenerator(String[] args) {
-
     CommandLine cli = new Parser().parse(args);
 
     String templatePath = FilenameUtils.normalize(cli.getOptionValue("template"));
     String variablesPath = FilenameUtils.normalize(cli.getOptionValue("variables"));
     String outputDirBasePath = FilenameUtils.normalize(cli.getOptionValue("output"));
 
+    new TemplatesGenerator().run(templatePath, variablesPath, outputDirBasePath);
+  }
+
+  private void run(String templatePath, String variablesPath, String outputDirBasePath) {
     LOGGER.info("Running MultiPathFileGenerator with\n    Velocity template path: {}\n    Variables file path: {}\n    Output path: {}",
         templatePath, variablesPath, outputDirBasePath);
 
