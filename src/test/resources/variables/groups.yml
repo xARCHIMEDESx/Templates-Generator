@@ -1,0 +1,5 @@
+groups:
+  - id: 1
+    name: employees
+  - id: 2
+    name: customers

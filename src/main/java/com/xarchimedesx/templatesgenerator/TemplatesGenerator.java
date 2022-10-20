@@ -2,14 +2,10 @@ package com.xarchimedesx.templatesgenerator;
 
 import com.xarchimedesx.templatesgenerator.cli.Parser;
 import com.xarchimedesx.templatesgenerator.directive.SaveFileDirective;
+import com.xarchimedesx.templatesgenerator.exception.NotInitializedException;
 import com.xarchimedesx.templatesgenerator.reader.ContextVariablesReader;
-
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.util.Map;
-
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -22,6 +18,14 @@ import org.apache.velocity.tools.ToolManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 public class TemplatesGenerator {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TemplatesGenerator.class);
@@ -30,29 +34,52 @@ public class TemplatesGenerator {
   private static final String CLASSPATH_RESOURCE_LOADER = "resource.loader.classpath.class";
   private static final String TOOLS_CONFIG_FILE = "toolsConfiguration.xml";
   private static final String OUTPUT_DIR_BASE_PATH_REFERENCE_NAME = "outputDirBasePath";
+  static final String VARIABLES_FILES_SEPARATOR = ",";
+  private ContextVariablesReader reader;
+  private Template template;
+  private Context velocityContext;
 
   public static void main(String[] args) {
     CommandLine cli = new Parser().parse(args);
 
-    String templatePath = FilenameUtils.normalize(cli.getOptionValue("template"));
-    String variablesPath = FilenameUtils.normalize(cli.getOptionValue("variables"));
-    String outputDirBasePath = FilenameUtils.normalize(cli.getOptionValue("output"));
+    String templatePath = cli.getOptionValue("template");
+    String variablesPaths = cli.getOptionValue("variables");
+    String outputDirBasePath = cli.getOptionValue("output");
+    boolean isCombined = cli.hasOption("combine");
 
-    new TemplatesGenerator().run(templatePath, variablesPath, outputDirBasePath);
+    TemplatesGenerator tg = new TemplatesGenerator();
+    tg.initialize(templatePath);
+    tg.render(variablesPaths, outputDirBasePath, isCombined);
   }
 
-  private void run(String templatePath, String variablesPath, String outputDirBasePath) {
-    LOGGER.info("Running MultiPathFileGenerator with\n    Velocity template path: {}\n    Variables file path: {}\n    Output path: {}",
-        templatePath, variablesPath, outputDirBasePath);
-
-    Map<String, Object> variables = new ContextVariablesReader().readVariables(variablesPath);
-
+  public void initialize(String templatePath) {
+    templatePath = FilenameUtils.normalize(templatePath);
+    LOGGER.info("Initializing Templates-Generator with\n    Velocity template path: {}", templatePath);
     VelocityEngine engine = initializeAndGetVelocityEngine(FilenameUtils.getFullPath(templatePath));
-    Template template = engine.getTemplate(FilenameUtils.getName(templatePath));
-    Context toolContext = initializeAndGetToolContext(engine);
-    Context velocityContext = initializeAndGetVelocityContext(variables, toolContext, outputDirBasePath);
+    this.template = engine.getTemplate(templatePath);
+    this.velocityContext = new VelocityContext(initializeAndGetToolContext(engine));
+    this.reader = new ContextVariablesReader();
+  }
 
-    mergeTemplateAndVelocityContext(template, velocityContext);
+  public void render(String variablesPaths, String outputDirBasePath, boolean isCombined) {
+    if (velocityContext != null) {
+      List<String> parsedVariablesPaths = preprocessVariablesPaths(variablesPaths);
+      outputDirBasePath = FilenameUtils.normalize(outputDirBasePath);
+      LOGGER.info("Running rendering with\n    Variables files paths: {}\n    Output path: {}\n    Is combined: {}",
+          parsedVariablesPaths, outputDirBasePath, isCombined);
+
+      List<Pair<String, Map<String, Object>>> variables = reader.processPaths(parsedVariablesPaths, isCombined);
+      int filesToBeSaved = variables.size();
+
+      for (Pair<String, Map<String, Object>> var : variables) {
+        String outputPath = formOutputPath(filesToBeSaved, outputDirBasePath, var.getKey());
+        updateVelocityContextWithVariables(var.getValue(), outputPath);
+        mergeTemplateAndVelocityContext();
+      }
+    } else {
+      throw new NotInitializedException("Templates-Generator has not been properly initialized. " +
+          "Have you forgotten to call 'initialize()' method first?");
+    }
   }
 
   private VelocityEngine initializeAndGetVelocityEngine(String templateDirPath) {
@@ -75,19 +102,31 @@ public class TemplatesGenerator {
     return toolManager.createContext();
   }
 
-  private Context initializeAndGetVelocityContext(Map<String, Object> variables, Context toolContext, String outputDirBasePath) {
-    Context velocityContext = new VelocityContext(variables, toolContext);
+  private void updateVelocityContextWithVariables(Map<String, Object> variables, String outputDirBasePath) {
+    variables.forEach(velocityContext::put);
     velocityContext.put(OUTPUT_DIR_BASE_PATH_REFERENCE_NAME, outputDirBasePath);
-
-    return velocityContext;
   }
 
-  private void mergeTemplateAndVelocityContext(Template template, Context velocityContext) {
+  private void mergeTemplateAndVelocityContext() {
     try (Writer writer = new StringWriter()) {
       template.merge(velocityContext, writer);
     } catch (IOException ioe) {
       LOGGER.error("Exception occurred while merging template and context: {}", ioe.getMessage());
       throw new RuntimeException(ioe);
     }
+  }
+
+  private List<String> preprocessVariablesPaths(String variablesPaths) {
+    return Arrays.stream(variablesPaths.split(VARIABLES_FILES_SEPARATOR))
+        .map(String::trim)
+        .map(FilenameUtils::normalize)
+        .collect(Collectors.toList());
+  }
+
+  private String formOutputPath(int filesToBeSaved, String outputDirBasePath, String renderedFileSubpath) {
+    if (filesToBeSaved == 1)
+      return outputDirBasePath;
+    else
+      return String.join("/", outputDirBasePath, renderedFileSubpath);
   }
 }

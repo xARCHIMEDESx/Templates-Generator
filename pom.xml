@@ -16,13 +16,13 @@
 
         <velocity.version>2.3</velocity.version>
         <velocity-tools.version>3.1</velocity-tools.version>
-        <jackson.version>2.12.3</jackson.version>
-        <commons-cli.version>1.4</commons-cli.version>
-        <log4j-slf4j.version>2.14.1</log4j-slf4j.version>
-        <junit-jupiter.version>5.7.2</junit-jupiter.version>
+        <jackson.version>2.13.4</jackson.version>
+        <commons-cli.version>1.5.0</commons-cli.version>
+        <log4j-slf4j.version>2.19.0</log4j-slf4j.version>
+        <junit-jupiter.version>5.9.1</junit-jupiter.version>
 
-        <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
-        <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
+        <maven-shade-plugin.version>3.4.0</maven-shade-plugin.version>
+        <maven-surefire-plugin.version>3.0.0-M7</maven-surefire-plugin.version>
     </properties>
 
     <dependencies>

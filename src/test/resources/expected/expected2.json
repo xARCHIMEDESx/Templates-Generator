@@ -1,0 +1,19 @@
+{
+  "usersAmount": 2,
+  "users": [
+    {
+      "ID": 3,
+      "Group ID": 777,
+      "Name": "Mary",
+      "Surname": "Poppins",
+      "Age": 999
+    },
+    {
+      "ID": 4,
+      "Group ID": 2,
+      "Name": "Peter",
+      "Surname": "Pan",
+      "Age": 12
+    }
+  ]
+}

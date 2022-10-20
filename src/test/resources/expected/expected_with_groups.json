@@ -1,0 +1,33 @@
+{
+  "usersAmount": 4,
+  "users": [
+    {
+      "ID": "1",
+      "Name": "John",
+      "Surname": "Doe",
+      "Age": 26,
+      "Group": "customers"
+    },
+    {
+      "ID": "2",
+      "Name": "Jane",
+      "Surname": "Doe",
+      "Age": 28,
+      "Group": "employees"
+    },
+    {
+      "ID": "3",
+      "Name": "Mary",
+      "Surname": "Poppins",
+      "Age": 999,
+      "Group": "unassigned"
+    },
+    {
+      "ID": "4",
+      "Name": "Peter",
+      "Surname": "Pan",
+      "Age": 12,
+      "Group": "customers"
+    }
+  ]
+}

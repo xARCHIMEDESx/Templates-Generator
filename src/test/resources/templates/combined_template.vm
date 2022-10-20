@@ -1,0 +1,42 @@
+#set( $comma = ',' )
+#set( $allUsers = [] )
+#flattenUsers
+#saveFile( "${outputDirBasePath}/usersWithGroups.json" )
+{
+  "usersAmount": $allUsers.size(),
+  "users": [
+    #foreach( $user in $allUsers )
+    #set( $groupName = "unassigned" )
+    #getGroupForUser
+    {
+      "ID": "$user.id",
+      "Name": "$user.personal.name",
+      "Surname": "$user.personal.surname",
+      "Age": $user.personal.age,
+      "Group": "$groupName"
+    }#if($foreach.hasNext)$comma#end
+    #end
+  ]
+}
+#end
+
+#macro( flattenUsers )
+    #if( !$users.isEmpty && $users.get(0).class.simpleName == "ArrayList" )
+        #foreach( $subusers in $users )
+            #foreach( $user in $subusers )
+                #set( $stub = $allUsers.add( $user ) )
+            #end
+        #end
+    #else
+        #set( $allUsers = $users )
+    #end
+#end
+
+#macro( getGroupForUser )
+    #foreach( $group in $groups )
+         #if( $group.id == $user.group_id )
+            #set( $groupName = $group.name )
+            #break
+         #end
+    #end
+#end

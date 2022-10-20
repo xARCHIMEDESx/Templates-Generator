@@ -1,11 +1,12 @@
-#saveFile( "${outputDirBasePath}/test-data/rendered.json" )
+#saveFile( "${outputDirBasePath}/users.json" )
 #set( $comma = ',' )
 {
   "usersAmount": $users.size(),
   "users": [
     #foreach( $user in $users )
     {
-      "ID": "$user.id",
+      "ID": $user.id,
+      "Group ID": $user.group_id,
       "Name": "$user.personal.name",
       "Surname": "$user.personal.surname",
       "Age": $user.personal.age
