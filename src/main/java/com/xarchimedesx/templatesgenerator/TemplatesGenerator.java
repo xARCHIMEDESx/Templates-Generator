@@ -2,7 +2,6 @@ package com.xarchimedesx.templatesgenerator;
 
 import com.xarchimedesx.templatesgenerator.cli.Parser;
 import com.xarchimedesx.templatesgenerator.directive.SaveFileDirective;
-import com.xarchimedesx.templatesgenerator.exception.NotInitializedException;
 import com.xarchimedesx.templatesgenerator.reader.ContextVariablesReader;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.lang3.tuple.Pair;
@@ -35,9 +34,9 @@ public class TemplatesGenerator {
   private static final String TOOLS_CONFIG_FILE = "toolsConfiguration.xml";
   private static final String OUTPUT_DIR_BASE_PATH_REFERENCE_NAME = "outputDirBasePath";
   static final String VARIABLES_FILES_SEPARATOR = ",";
-  private ContextVariablesReader reader;
-  private Template template;
-  private Context velocityContext;
+  private final ContextVariablesReader reader;
+  private final Context toolContext;
+  private final VelocityEngine engine;
 
   public static void main(String[] args) {
     CommandLine cli = new Parser().parse(args);
@@ -48,45 +47,38 @@ public class TemplatesGenerator {
     boolean isCombined = cli.hasOption("combine");
 
     TemplatesGenerator tg = new TemplatesGenerator();
-    tg.initialize(templatePath);
-    tg.render(variablesPaths, outputDirBasePath, isCombined);
+    tg.render(templatePath, variablesPaths, outputDirBasePath, isCombined);
   }
 
-  public void initialize(String templatePath) {
-    templatePath = FilenameUtils.normalize(templatePath);
-    LOGGER.info("Initializing Templates-Generator with\n    Velocity template path: {}", templatePath);
-    VelocityEngine engine = initializeAndGetVelocityEngine(FilenameUtils.getFullPath(templatePath));
-    this.template = engine.getTemplate(templatePath);
-    this.velocityContext = new VelocityContext(initializeAndGetToolContext(engine));
+  public TemplatesGenerator() {
+    this.engine = initializeAndGetVelocityEngine();
+    this.toolContext = initializeAndGetToolContext(engine);
     this.reader = new ContextVariablesReader();
   }
 
-  public void render(String variablesPaths, String outputDirBasePath, boolean isCombined) {
-    if (velocityContext != null) {
-      List<String> parsedVariablesPaths = preprocessVariablesPaths(variablesPaths);
-      outputDirBasePath = FilenameUtils.normalize(outputDirBasePath);
-      LOGGER.info("Running rendering with\n    Variables files paths: {}\n    Output path: {}\n    Is combined: {}",
-          parsedVariablesPaths, outputDirBasePath, isCombined);
+  public void render(String templatePath, String variablesPaths, String outputDirBasePath, boolean isCombined) {
+    List<String> parsedVariablesPaths = preprocessVariablesPaths(variablesPaths);
+    templatePath = FilenameUtils.normalize(templatePath);
+    outputDirBasePath = FilenameUtils.normalize(outputDirBasePath);
 
-      List<Pair<String, Map<String, Object>>> variables = reader.processPaths(parsedVariablesPaths, isCombined);
-      int filesToBeSaved = variables.size();
+    LOGGER.info("Running rendering with\n    Velocity template path: {}\n    Variables files paths: {}\n    Output path: {}\n    Is combined: {}",
+        templatePath, parsedVariablesPaths, outputDirBasePath, isCombined);
 
-      for (Pair<String, Map<String, Object>> var : variables) {
-        String outputPath = formOutputPath(filesToBeSaved, outputDirBasePath, var.getKey());
-        updateVelocityContextWithVariables(var.getValue(), outputPath);
-        mergeTemplateAndVelocityContext();
-      }
-    } else {
-      throw new NotInitializedException("Templates-Generator has not been properly initialized. " +
-          "Have you forgotten to call 'initialize()' method first?");
+    Template template = engine.getTemplate(templatePath);
+    List<Pair<String, Map<String, Object>>> variables = reader.processPaths(parsedVariablesPaths, isCombined);
+    int filesToBeSaved = variables.size();
+
+    for (Pair<String, Map<String, Object>> var : variables) {
+      String outputPath = formOutputPath(filesToBeSaved, outputDirBasePath, var.getKey());
+      Context velocityContext = initializeAndGetVelocityContext(var.getValue(), outputPath);
+      mergeTemplateAndVelocityContext(template, velocityContext);
     }
   }
 
-  private VelocityEngine initializeAndGetVelocityEngine(String templateDirPath) {
+  private VelocityEngine initializeAndGetVelocityEngine() {
     VelocityEngine engine = new VelocityEngine();
     engine.setProperty(RuntimeConstants.CUSTOM_DIRECTIVES, SaveFileDirective.class.getName());
     engine.setProperty(RuntimeConstants.RESOURCE_LOADERS, RESOURCE_LOADERS_NAMES);
-    engine.setProperty(RuntimeConstants.FILE_RESOURCE_LOADER_PATH, templateDirPath);
     engine.setProperty(FILE_RESOURCE_LOADER, FileResourceLoader.class.getName());
     engine.setProperty(CLASSPATH_RESOURCE_LOADER, ClasspathResourceLoader.class.getName());
     engine.init();
@@ -102,12 +94,14 @@ public class TemplatesGenerator {
     return toolManager.createContext();
   }
 
-  private void updateVelocityContextWithVariables(Map<String, Object> variables, String outputDirBasePath) {
-    variables.forEach(velocityContext::put);
+  private Context initializeAndGetVelocityContext(Map<String, Object> variables, String outputDirBasePath) {
+    Context velocityContext = new VelocityContext(variables, toolContext);
     velocityContext.put(OUTPUT_DIR_BASE_PATH_REFERENCE_NAME, outputDirBasePath);
+
+    return velocityContext;
   }
 
-  private void mergeTemplateAndVelocityContext() {
+  private void mergeTemplateAndVelocityContext(Template template, Context velocityContext) {
     try (Writer writer = new StringWriter()) {
       template.merge(velocityContext, writer);
     } catch (IOException ioe) {

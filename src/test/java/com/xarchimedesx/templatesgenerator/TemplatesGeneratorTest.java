@@ -2,7 +2,6 @@ package com.xarchimedesx.templatesgenerator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.xarchimedesx.templatesgenerator.exception.NotInitializedException;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
@@ -31,7 +30,7 @@ public class TemplatesGeneratorTest {
 
   private static final String OUTPUT_DIR_BASE_PATH = String.join(File.separator, "target", "test-data");
   private static final String RENDERED_USERS_PATH = String.join(File.separator, OUTPUT_DIR_BASE_PATH, "users.json");
-  private static final String RENDERED_USERS_WITH_GROUPS_PATH = String.join(File.separator, OUTPUT_DIR_BASE_PATH, "usersWithGroups.json");
+  private static final String RENDERED_USERS_WITH_GROUPS_PATH = String.join(File.separator, OUTPUT_DIR_BASE_PATH, "users_with_groups.json");
   private static final String RENDERED_USERS1_PATH = String.join(File.separator, OUTPUT_DIR_BASE_PATH, "users1", "users.json");
   private static final String RENDERED_USERS2_PATH = String.join(File.separator, OUTPUT_DIR_BASE_PATH, "users2", "users.json");
 
@@ -41,8 +40,7 @@ public class TemplatesGeneratorTest {
 
   @Test
   public void renderOneFile() throws IOException {
-    GENERATOR.initialize(TEMPLATE_PATH);
-    GENERATOR.render(USERS1_PATH, OUTPUT_DIR_BASE_PATH, false);
+    GENERATOR.render(TEMPLATE_PATH, USERS1_PATH, OUTPUT_DIR_BASE_PATH, false);
     JsonNode expectedContent = MAPPER.readTree(CLASS_LOADER.getResourceAsStream(EXPECTED_FILE1_PATH));
     JsonNode renderedContent = MAPPER.readTree(Paths.get(RENDERED_USERS_PATH).toFile());
 
@@ -51,8 +49,7 @@ public class TemplatesGeneratorTest {
 
   @Test
   public void renderFilesInDirectoryNotCombined() throws IOException {
-    GENERATOR.initialize(TEMPLATE_PATH);
-    GENERATOR.render(USERS_DIR_PATH, OUTPUT_DIR_BASE_PATH, false);
+    GENERATOR.render(TEMPLATE_PATH, USERS_DIR_PATH, OUTPUT_DIR_BASE_PATH, false);
     JsonNode expectedContent1 = MAPPER.readTree(CLASS_LOADER.getResourceAsStream(EXPECTED_FILE1_PATH));
     JsonNode renderedContent1 = MAPPER.readTree(Paths.get(RENDERED_USERS1_PATH).toFile());
     JsonNode expectedContent2 = MAPPER.readTree(CLASS_LOADER.getResourceAsStream(EXPECTED_FILE2_PATH));
@@ -64,8 +61,7 @@ public class TemplatesGeneratorTest {
 
   @Test
   public void renderDirectoryAndAdditionalFileCombined() throws IOException {
-    GENERATOR.initialize(COMBINED_TEMPLATE_PATH);
-    GENERATOR.render(String.join(TemplatesGenerator.VARIABLES_FILES_SEPARATOR, USERS_DIR_PATH, GROUPS_PATH),
+    GENERATOR.render(COMBINED_TEMPLATE_PATH, String.join(TemplatesGenerator.VARIABLES_FILES_SEPARATOR, USERS_DIR_PATH, GROUPS_PATH),
         OUTPUT_DIR_BASE_PATH, true);
 
     JsonNode expectedContent = MAPPER.readTree(CLASS_LOADER.getResourceAsStream(EXPECTED_FILE_COMBINED_PATH));
@@ -75,24 +71,12 @@ public class TemplatesGeneratorTest {
   }
 
   @Test
-  public void failWhenNotInitialized() {
-    assertThrows(NotInitializedException.class, () ->
-        new TemplatesGenerator().render(USERS1_PATH, OUTPUT_DIR_BASE_PATH, false));
-  }
-
-  @Test
   public void failOnInvalidTemplate() {
-    assertThrows(ParseErrorException.class, () -> {
-      GENERATOR.initialize(INVALID_TEMPLATE_PATH);
-      GENERATOR.render(USERS1_PATH, OUTPUT_DIR_BASE_PATH, false);
-    });
+    assertThrows(ParseErrorException.class, () -> GENERATOR.render(INVALID_TEMPLATE_PATH, USERS1_PATH, OUTPUT_DIR_BASE_PATH, false));
   }
 
   @Test
   public void failOnNonExistingTemplate() {
-    assertThrows(ResourceNotFoundException.class, () -> {
-      GENERATOR.initialize(NONEXISTING_TEMPLATE_PATH);
-      GENERATOR.render(USERS1_PATH, OUTPUT_DIR_BASE_PATH, false);
-    });
+    assertThrows(ResourceNotFoundException.class, () -> GENERATOR.render(NONEXISTING_TEMPLATE_PATH, USERS1_PATH, OUTPUT_DIR_BASE_PATH, false));
   }
 }

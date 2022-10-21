@@ -1,7 +1,7 @@
 #set( $comma = ',' )
 #set( $allUsers = [] )
 #flattenUsers
-#saveFile( "${outputDirBasePath}/usersWithGroups.json" )
+#saveFile( "${outputDirBasePath}/users_with_groups.json" )
 {
   "usersAmount": $allUsers.size(),
   "users": [
