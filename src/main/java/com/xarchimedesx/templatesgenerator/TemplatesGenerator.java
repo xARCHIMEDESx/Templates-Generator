@@ -8,6 +8,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.app.event.implement.IncludeRelativePath;
 import org.apache.velocity.context.Context;
 import org.apache.velocity.runtime.RuntimeConstants;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
@@ -52,7 +53,7 @@ public class TemplatesGenerator {
 
   public TemplatesGenerator() {
     this.engine = initializeAndGetVelocityEngine();
-    this.toolContext = initializeAndGetToolContext(engine);
+    this.toolContext = initializeAndGetToolContext();
     this.reader = new ContextVariablesReader();
   }
 
@@ -79,6 +80,7 @@ public class TemplatesGenerator {
     VelocityEngine engine = new VelocityEngine();
     engine.setProperty(RuntimeConstants.CUSTOM_DIRECTIVES, SaveFileDirective.class.getName());
     engine.setProperty(RuntimeConstants.RESOURCE_LOADERS, RESOURCE_LOADERS_NAMES);
+    engine.setProperty(RuntimeConstants.EVENTHANDLER_INCLUDE, IncludeRelativePath.class.getName());
     engine.setProperty(FILE_RESOURCE_LOADER, FileResourceLoader.class.getName());
     engine.setProperty(CLASSPATH_RESOURCE_LOADER, ClasspathResourceLoader.class.getName());
     engine.init();
@@ -86,7 +88,7 @@ public class TemplatesGenerator {
     return engine;
   }
 
-  private Context initializeAndGetToolContext(VelocityEngine engine) {
+  private Context initializeAndGetToolContext() {
     ToolManager toolManager = new ToolManager(false, true);
     toolManager.configure(TOOLS_CONFIG_FILE);
     toolManager.setVelocityEngine(engine);

@@ -1,5 +1,5 @@
-#saveFile( "${outputDirBasePath}/users.json" )
 #set( $comma = ',' )
+#saveFile( "${outputDirBasePath}/users.json" )
 {
   "usersAmount": $users.size(),
   "users": [
