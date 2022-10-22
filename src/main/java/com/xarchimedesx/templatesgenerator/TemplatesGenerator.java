@@ -80,6 +80,7 @@ public class TemplatesGenerator {
     VelocityEngine engine = new VelocityEngine();
     engine.setProperty(RuntimeConstants.CUSTOM_DIRECTIVES, SaveFileDirective.class.getName());
     engine.setProperty(RuntimeConstants.RESOURCE_LOADERS, RESOURCE_LOADERS_NAMES);
+    engine.setProperty(RuntimeConstants.FILE_RESOURCE_LOADER_PATH, "");
     engine.setProperty(RuntimeConstants.EVENTHANDLER_INCLUDE, IncludeRelativePath.class.getName());
     engine.setProperty(FILE_RESOURCE_LOADER, FileResourceLoader.class.getName());
     engine.setProperty(CLASSPATH_RESOURCE_LOADER, ClasspathResourceLoader.class.getName());

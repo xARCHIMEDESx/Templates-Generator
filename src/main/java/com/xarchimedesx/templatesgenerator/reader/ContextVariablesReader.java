@@ -3,6 +3,7 @@ package com.xarchimedesx.templatesgenerator.reader;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.velocity.shaded.commons.io.FilenameUtils;
 import org.slf4j.Logger;
@@ -12,13 +13,13 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.Files;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,7 +49,7 @@ public class ContextVariablesReader {
           .collect(Collectors.toList());
     }
 
-    if(variables.isEmpty()){
+    if (variables.isEmpty()) {
       LOGGER.warn("No data was read from provides variables paths!");
     }
 
@@ -82,16 +83,17 @@ public class ContextVariablesReader {
 
     File localFile = new File(path);
     if (localFile.exists()) {
+      try {
+        System.out.println(localFile.toURI().toURL());
+      } catch (MalformedURLException e) {
+        throw new RuntimeException(e);
+      }
       return getLocalFileStream(localFile, namedStreams);
     } else {
-      String refinedPath = FilenameUtils.separatorsToUnix(path);
-      URL resource = CLASS_LOADER.getResource(refinedPath);
-      if (resource != null) {
-        if (resource.getProtocol().equals("file")) {
-          LOGGER.debug(String.valueOf(new File(resource.getPath()).isDirectory()));
-        }
-        return getLocalFileStream(new File(resource.getPath()), namedStreams);
-        //return getFileStreamFromClassPath(refinedPath, namedSteams);
+      URL url = CLASS_LOADER.getResource(FilenameUtils.separatorsToUnix(path));
+      System.out.println(url);
+      if (url != null) {
+        return getResourceFileStream(url);
       } else {
         throw new IllegalArgumentException("Variables file/directory \"" + path + "\" does not exist.");
       }
@@ -118,13 +120,47 @@ public class ContextVariablesReader {
     }
   }
 
-  private Map<String, BufferedInputStream> getFileStreamFromClassPath(String path, Map<String, BufferedInputStream> namedStreams) {
+  private Map<String, BufferedInputStream> getResourceFileStream(URL url) {
+    if (url.getProtocol().equals("jar")) {
+      return inspectJar(url);
+    } else {
+      return inspectResource(url);
+    }
+  }
+
+  private Map<String, BufferedInputStream> inspectResource(URL url) {
+    try (Stream<Path> stream = Files.walk(Paths.get(url.toURI()), 1)) {
+      return stream.filter(Files::isRegularFile)
+          .map(path -> {
+            try {
+              return Pair.of(path.toString(), new BufferedInputStream(Files.newInputStream(path)));
+            } catch (IOException e) {
+              throw new RuntimeException(e);
+            }
+          }).collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
+    } catch (IOException | URISyntaxException e) {
+      throw new IllegalArgumentException("Cannot open variables file: " + url);
+    }
+  }
+
+  private Map<String, BufferedInputStream> inspectJar(URL url) {
+    try (FileSystem fs = FileSystems.newFileSystem(url.toURI(), Collections.emptyMap());
+         Stream<Path> stream = Files.walk(Paths.get(url.toURI()), 1)) {
+      return stream.filter(Files::isRegularFile)
+          .map(path -> StringUtils.stripStart(path.toString(), "/"))
+          .map(this::getJarFileStream)
+          .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
+    } catch (IOException | URISyntaxException e) {
+      throw new IllegalArgumentException("Cannot open variables file: " + url);
+    }
+  }
+
+  private Pair<String, BufferedInputStream> getJarFileStream(String path) {
     InputStream input = CLASS_LOADER.getResourceAsStream(path);
     if (input != null) {
-      namedStreams.put(path, new BufferedInputStream(input));
-      return namedStreams;
+      return Pair.of(path, new BufferedInputStream(input));
     } else {
-      throw new IllegalArgumentException("CHECK ME LATER");
+      throw new IllegalArgumentException("Cannot open variables file: " + path);
     }
   }
 
