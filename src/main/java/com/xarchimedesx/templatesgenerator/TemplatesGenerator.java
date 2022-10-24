@@ -66,7 +66,7 @@ public class TemplatesGenerator {
         templatePath, parsedVariablesPaths, outputDirBasePath, isCombined);
 
     Template template = engine.getTemplate(templatePath);
-    List<Pair<String, Map<String, Object>>> variables = reader.processPaths(parsedVariablesPaths, isCombined);
+    List<Pair<String, Map<String, Object>>> variables = reader.getVariables(parsedVariablesPaths, isCombined);
     int filesToBeSaved = variables.size();
 
     for (Pair<String, Map<String, Object>> var : variables) {

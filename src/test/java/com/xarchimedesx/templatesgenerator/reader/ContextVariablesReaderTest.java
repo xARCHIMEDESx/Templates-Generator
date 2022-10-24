@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.List;
@@ -162,50 +163,50 @@ public class ContextVariablesReaderTest {
 
   @Test
   public void readYaml() {
-    assertEquals(expectedUsers1Content, READER.getNamedVariables(USERS1_PATH));
+    assertEquals(expectedUsers1Content, READER.processPath(USERS1_PATH));
   }
 
   @Test
   public void readJson() {
-    assertEquals(expectedUsers2Content, READER.getNamedVariables(USERS2_PATH));
+    assertEquals(expectedUsers2Content, READER.processPath(USERS2_PATH));
   }
 
   @Test
   public void readDirectory() {
-    assertEquals(expectedDirContent, READER.getNamedVariables(USERS_DIR_PATH));
+    assertEquals(expectedDirContent, READER.processPath(USERS_DIR_PATH));
   }
 
   @Test
   public void failOnInvalidVariables() {
-    assertThrows(RuntimeException.class, () -> READER.getNamedVariables(INVALID_VARIABLES_PATH));
+    assertThrows(RuntimeException.class, () -> READER.processPath(INVALID_VARIABLES_PATH));
   }
 
   @Test
   public void failOnNonExistingVariables() {
-    assertThrows(IllegalArgumentException.class, () -> READER.getNamedVariables(NONEXISTING_VARIABLES_PATH));
+    assertThrows(IllegalArgumentException.class, () -> READER.processPath(NONEXISTING_VARIABLES_PATH));
   }
 
   @Test
   public void multifileInputNonCombined() {
     assertEquals(expectedAllContentNonCombined,
-        READER.processPaths(Arrays.asList(USERS_DIR_PATH, GROUPS_PATH), false));
+        READER.getVariables(Arrays.asList(USERS_DIR_PATH, GROUPS_PATH), false));
   }
 
   @Test
   public void multifileInputCombined() {
     assertEquals(expectedAllContentCombined,
-        READER.processPaths(Arrays.asList(USERS_DIR_PATH, GROUPS_PATH), true));
+        READER.getVariables(Arrays.asList(USERS_DIR_PATH, GROUPS_PATH), true));
   }
 
   @Test
   public void extensionFilterSupportedTest() {
     ContextVariablesReader.SUPPORTED_EXTENSIONS.stream()
         .map(e -> "file." + e)
-        .forEach(f -> assertTrue(READER.extensionFilter(f)));
+        .forEach(f -> assertTrue(READER.extensionFilter(Paths.get(f))));
   }
 
   @Test
   public void extensionFilterNonSupportedTest() {
-    assertFalse(READER.extensionFilter("file.txt"));
+    assertFalse(READER.extensionFilter(Paths.get("file.txt")));
   }
 }

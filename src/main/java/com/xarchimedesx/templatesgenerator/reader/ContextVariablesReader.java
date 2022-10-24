@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -32,13 +33,13 @@ public class ContextVariablesReader {
   private static final Logger LOGGER = LoggerFactory.getLogger(ContextVariablesReader.class);
   static final List<String> SUPPORTED_EXTENSIONS = Arrays.asList("json", "yaml", "yml");
 
-  public List<Pair<String, Map<String, Object>>> processPaths(List<String> parsedVariablesPaths, boolean isCombined) {
+  public List<Pair<String, Map<String, Object>>> getVariables(List<String> parsedVariablesPaths, boolean isCombined) {
     List<Pair<String, Map<String, Object>>> variables;
     if (isCombined) {
       variables = Stream.of(
           Pair.of("COMBINED",
               parsedVariablesPaths.stream()
-                  .map(this::getNamedVariables)
+                  .map(this::processPath)
                   .flatMap(List::stream)
                   .map(Pair::getValue)
                   .flatMap(m -> m.entrySet().stream())
@@ -47,7 +48,7 @@ public class ContextVariablesReader {
       ).collect(Collectors.toList());
     } else {
       variables = parsedVariablesPaths.stream()
-          .map(this::getNamedVariables)
+          .map(this::processPath)
           .flatMap(List::stream)
           .collect(Collectors.toList());
     }
@@ -60,87 +61,85 @@ public class ContextVariablesReader {
   }
 
   // package-private for tests
-  List<Pair<String, Map<String, Object>>> getNamedVariables(String variablesPath) {
-    return inspectPath(variablesPath).entrySet()
-        .stream()
-        .filter(e -> extensionFilter(e.getKey()))
-        .map(e -> Pair.of(
-            FilenameUtils.getBaseName(e.getKey()),
-            getFileContent(e.getValue())
-        ))
-        .collect(Collectors.toList());
-  }
-
-  private Map<String, BufferedInputStream> inspectPath(String path) {
+  List<Pair<String, Map<String, Object>>> processPath(String variablesPath) {
     try {
-      File localFile = new File(path);
-      URL url = localFile.exists()
-          ? localFile.toURI().toURL()
-          : ContextVariablesReader.class.getClassLoader().getResource(FilenameUtils.separatorsToUnix(path));
+      List<Pair<String, Map<String, Object>>> namedVariables = new ArrayList<>();
+      URI uri = getUriFromPath(variablesPath);
+      List<Path> discoveredPaths = inspectUri(uri);
 
-      if (url != null) {
-        String protocol = url.getProtocol();
-        URI uri = url.toURI();
-        if (protocol.equals("file")) {
-          return walkThroughPath(uri, protocol);
-        } else if (protocol.equals("jar")) {
-          // to convert a URI to a Path we need to create a JAR file system first
-          try (FileSystem fs = FileSystems.newFileSystem(uri, Collections.emptyMap())) {
-            return walkThroughPath(uri, protocol);
-          }
-        } else {
-          throw new IllegalArgumentException("Unsupported protocol for given URL: " + url);
-        }
-      } else {
-        throw new IllegalArgumentException("Variables file/directory \"" + path + "\" does not exist.");
+      for (Path discoveredPath : discoveredPaths) {
+        namedVariables.add(Pair.of(
+            FilenameUtils.getBaseName(discoveredPath.toString()),
+            getFileContent(getInputStream(discoveredPath, uri.getScheme()))
+        ));
       }
+      return namedVariables;
     } catch (IOException | URISyntaxException ex) {
-      LOGGER.error("Cannot open variables file: {}", path);
-      throw new IllegalArgumentException(ex);
+      LOGGER.error("Cannot open variables file: {}", variablesPath);
+      throw new RuntimeException(ex);
     }
   }
 
-  private Map<String, BufferedInputStream> walkThroughPath(URI uri, String protocol) throws URISyntaxException, IOException {
-    try (Stream<Path> stream = Files.walk(Paths.get(uri), 1)) {
-      return stream.filter(Files::isRegularFile)
-          .map(path -> Pair.of(path.toString(), getInputStream(path, protocol)))
-          .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
-    }
-  }
-
-  private BufferedInputStream getInputStream(Path path, String protocol) {
-    try {
-      InputStream inputStream = protocol.equals("file")
-          ? Files.newInputStream(path)
-          : ContextVariablesReader.class.getResourceAsStream(String.valueOf(path));
-
-      if (inputStream != null) {
-        return new BufferedInputStream(inputStream);
+  private URI getUriFromPath(String variablesPath) throws URISyntaxException {
+    File localFile = new File(variablesPath);
+    if (localFile.exists()) {
+      return localFile.toURI();
+    } else {
+      URL resource = ContextVariablesReader.class.getClassLoader().getResource(FilenameUtils.separatorsToUnix(variablesPath));
+      if (resource != null) {
+        return resource.toURI();
       } else {
-        throw new IllegalArgumentException("Cannot open variables file: " + path);
+        throw new IllegalArgumentException("Variables file/directory \"" + variablesPath + "\" does not exist.");
       }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
     }
   }
 
-  private Map<String, Object> getFileContent(BufferedInputStream fileStream) {
-    try {
-      return new ObjectMapper(new YAMLFactory()).readValue(fileStream, new TypeReference<Map<String, Object>>() {
-      });
-    } catch (IOException ioe) {
-      LOGGER.error("Exception occurred while reading variables from file: {}", ioe.getMessage());
-      throw new RuntimeException(ioe);
+  private List<Path> inspectUri(URI uri) throws URISyntaxException, IOException {
+    String scheme = uri.getScheme();
+    if (scheme.equals("file")) {
+      return walkThroughPath(uri);
+    } else if (scheme.equals("jar")) {
+      // to properly convert a URI to a Path we need to create a JAR file system first
+      try (FileSystem fs = FileSystems.newFileSystem(uri, Collections.emptyMap())) {
+        return walkThroughPath(uri);
+      }
+    } else {
+      throw new IllegalArgumentException("Unsupported scheme in given URI: " + uri);
     }
+  }
+
+  private List<Path> walkThroughPath(URI uri) throws IOException {
+    try (Stream<Path> stream = Files.walk(Paths.get(uri))) {
+      return stream.filter(Files::isRegularFile)
+          .filter(this::extensionFilter)
+          .sorted()
+          .collect(Collectors.toList());
+    }
+  }
+
+  private BufferedInputStream getInputStream(Path path, String scheme) throws IOException {
+    InputStream inputStream = scheme.equals("file")
+        ? Files.newInputStream(path)
+        : ContextVariablesReader.class.getResourceAsStream(path.toString());
+    if (inputStream != null) {
+      return new BufferedInputStream(inputStream);
+    } else {
+      throw new IOException("Cannot open input stream for file: " + path);
+    }
+  }
+
+  private Map<String, Object> getFileContent(BufferedInputStream fileStream) throws IOException {
+    return new ObjectMapper(new YAMLFactory()).readValue(fileStream, new TypeReference<Map<String, Object>>() {
+    });
   }
 
   // package-private for tests
-  boolean extensionFilter(String fileName) {
-    if (SUPPORTED_EXTENSIONS.contains(FilenameUtils.getExtension(fileName))) {
+  boolean extensionFilter(Path path) {
+    if (SUPPORTED_EXTENSIONS.contains(FilenameUtils.getExtension(path.toString()))) {
       return true;
     } else {
       LOGGER.warn("Unrecognized variables file format! Templates-generator supports only .json and .yml/.yaml file extensions.");
-      LOGGER.warn("Skipping file: {}", fileName);
+      LOGGER.warn("Skipping file: {}", path);
       return false;
     }
   }
