@@ -33,6 +33,14 @@ public class ContextVariablesReader {
   private static final Logger LOGGER = LoggerFactory.getLogger(ContextVariablesReader.class);
   static final List<String> SUPPORTED_EXTENSIONS = Arrays.asList("json", "yaml", "yml");
 
+  /**
+   *
+   * @param parsedVariablesPaths - list of paths to variables to be processed. Every path can be a file path or a directory path.
+   * @param isCombined - Whether to combine multiple variables files' content inside single collection.
+   * @return List of tuples, where the left side is the name of the file which was processed and the right side - its content.
+   * If {@code isCombined == true} - merges all the content inside single collection.
+   */
+
   public List<Pair<String, Map<String, Object>>> getVariables(List<String> parsedVariablesPaths, boolean isCombined) {
     List<Pair<String, Map<String, Object>>> variables;
     if (isCombined) {

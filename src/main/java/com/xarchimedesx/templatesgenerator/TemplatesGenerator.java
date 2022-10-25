@@ -39,6 +39,16 @@ public class TemplatesGenerator {
   private final Context toolContext;
   private final VelocityEngine engine;
 
+  /**
+   * CLI entrypoint. Parses input array of strings using Apache CLI.
+   *
+   * @param args input command line configuration.<br>
+   *             -t/--template - Velocity template path.<br>
+   *             -v/--variables - Variables file/dir path.<br>
+   *             -o/--output - Output path.<br>
+   *             -c/--combine - Whether to combine multiple variables files inside single context
+   *             or to render output per input file. Optional. Default value is false.
+   */
   public static void main(String[] args) {
     CommandLine cli = new Parser().parse(args);
 
@@ -57,6 +67,15 @@ public class TemplatesGenerator {
     this.reader = new ContextVariablesReader();
   }
 
+  /**
+   * Entrypoint when using Templates-Generator as a library.
+   *
+   * @param templatePath      Velocity template path.
+   * @param variablesPaths    Variables file/dir path.
+   * @param outputDirBasePath Output path.
+   * @param isCombined        Whether to combine multiple variables files inside single context
+   *                          or to render output per input file.
+   */
   public void render(String templatePath, String variablesPaths, String outputDirBasePath, boolean isCombined) {
     List<String> parsedVariablesPaths = preprocessVariablesPaths(variablesPaths);
     templatePath = FilenameUtils.normalize(templatePath);

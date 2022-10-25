@@ -18,7 +18,7 @@ public class Parser {
     options.addRequiredOption("t", "template", true, "Velocity template path.");
     options.addRequiredOption("v", "variables", true, "Variables file/dir path.");
     options.addRequiredOption("o", "output", true, "Output path.");
-    options.addOption("c", "combine", false, "Combine variables files in given dir inside single context");
+    options.addOption("c", "combine", false, "Whether to combine multiple variables files inside single context");
 
     try {
       return new DefaultParser().parse(options, args);
