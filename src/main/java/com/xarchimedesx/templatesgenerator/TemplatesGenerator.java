@@ -43,11 +43,12 @@ public class TemplatesGenerator {
    * CLI entrypoint. Parses input array of strings using Apache CLI.
    *
    * @param args input command line configuration.<br>
-   *             -t/--template - Velocity template path.<br>
-   *             -v/--variables - Variables file/dir path.<br>
-   *             -o/--output - Output path.<br>
-   *             -c/--combine - Whether to combine multiple variables files inside single context
-   *             or to render output per input file. Optional. Default value is false.
+   *             --template (-t) - Velocity template path.<br>
+   *             --variables (-v) - Comma-separated list of paths to files/directories with variables.
+   *             .json, .yaml/.yml extensions are supported.<br>
+   *             --output (-o) - Output path.<br>
+   *             --combine (-c) - No args. Whether to combine multiple variables files' content inside single context
+   *             or to render output per input file. Optional. 'False' if not set.
    */
   public static void main(String[] args) {
     CommandLine cli = new Parser().parse(args);
@@ -71,9 +72,10 @@ public class TemplatesGenerator {
    * Entrypoint when using Templates-Generator as a library.
    *
    * @param templatePath      Velocity template path.
-   * @param variablesPaths    Variables file/dir path.
+   * @param variablesPaths    Comma-separated list of paths to files/directories with variables.
+   *                          .json, .yaml/.yml extensions are supported.<br>
    * @param outputDirBasePath Output path.
-   * @param isCombined        Whether to combine multiple variables files inside single context
+   * @param isCombined        Whether to combine multiple variables files' content inside single context
    *                          or to render output per input file.
    */
   public void render(String templatePath, String variablesPaths, String outputDirBasePath, boolean isCombined) {
