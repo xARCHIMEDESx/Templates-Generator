@@ -16,8 +16,10 @@ public class Parser {
 
     Options options = new Options();
     options.addRequiredOption("t", "template", true, "Velocity template path.");
-    options.addRequiredOption("v", "variables", true, "Variables file path.");
+    options.addRequiredOption("v", "variables", true, "Comma-separated list of paths to files/directories with variables. " +
+        ".json, .yaml/.yml extensions are supported.");
     options.addRequiredOption("o", "output", true, "Output path.");
+    options.addOption("c", "combine", false, "Whether to combine multiple variables files' content inside single context");
 
     try {
       return new DefaultParser().parse(options, args);

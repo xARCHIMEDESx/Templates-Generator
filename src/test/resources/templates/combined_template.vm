@@ -1,0 +1,22 @@
+#parse( "macros.vm" )
+#set( $comma = ',' )
+#set( $allUsers = [] )
+#flattenUsers
+#saveFile( "${outputDirBasePath}/users_with_groups.json" )
+{
+  "usersAmount": $allUsers.size(),
+  "users": [
+    #foreach( $user in $allUsers )
+    #set( $groupName = "unassigned" )
+    #getGroupForUser
+    {
+      "ID": "$user.id",
+      "Name": "$user.personal.name",
+      "Surname": "$user.personal.surname",
+      "Age": $user.personal.age,
+      "Group": "$groupName"
+    }#if($foreach.hasNext)$comma#end
+    #end
+  ]
+}
+#end
