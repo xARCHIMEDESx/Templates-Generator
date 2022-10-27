@@ -142,9 +142,8 @@ public class TemplatesGenerator {
   }
 
   private String formOutputPath(int filesToBeSaved, String outputDirBasePath, String renderedFileSubpath) {
-    if (filesToBeSaved == 1)
-      return outputDirBasePath;
-    else
-      return String.join("/", outputDirBasePath, renderedFileSubpath);
+    return filesToBeSaved == 1
+        ? outputDirBasePath
+        : String.join("/", outputDirBasePath, renderedFileSubpath);
   }
 }
