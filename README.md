@@ -74,12 +74,14 @@ templatesGenerator.render(templatePath, variablesPaths, outputDirBasePath, isCom
 users: 
   - 
     id: 001
+    group_id: 2
     personal: 
       age: 26
       name: John
       surname: Doe
   - 
     id: 002
+    group_id: 1
     personal: 
       age: 28
       name: Jane
@@ -124,7 +126,8 @@ For `templates-generator` you need to provide a path to the *"main"* template, w
   "users": [
     #foreach( $user in $users )
     {
-      "ID": "$user.id",
+      "ID": $user.id,
+      "Group ID": $user.group_id,
       "Name": "$user.personal.name",
       "Surname": "$user.personal.surname",
       "Age": $user.personal.age
@@ -141,14 +144,15 @@ You can provide the content directly as template, call a macro, parse another .v
 
 *Full example of template is following*:
 ```
-#saveFile( "${outputDirBasePath}/test-data/rendered.json" )
 #set( $comma = ',' )
+#saveFile( "${outputDirBasePath}/test-data/users.json" )
 {
   "usersAmount": $users.size(),
   "users": [
     #foreach( $user in $users )
     {
-      "ID": "$user.id",
+      "ID": $user.id,
+      "Group ID": $user.group_id,
       "Name": "$user.personal.name",
       "Surname": "$user.personal.surname",
       "Age": $user.personal.age
@@ -158,28 +162,30 @@ You can provide the content directly as template, call a macro, parse another .v
 }
 #end
 ```
-**$outputDirBasePath** - is actually the argument, passed to `templates-generator` as *--output* and it is propagated to Velocity context.
-Actually, you may not use it and pass only `test-data/rendered.json` to the save directive, but in this case file will be saved using relative path from the directory
+**$outputDirBasePath** - is actually the argument, passed to `templates-generator` as *--output*, and it is propagated to Velocity context.
+Actually, you may not use it and pass only `test-data/users.json` to the save directive, but in this case file will be saved using relative path from the directory
 in which `templates-generator` was launched. Using *$outputDirBasePath* gives possibility to save files at any location using absolute or some specific relative path.
 You also may hardcode an absolute path directly in a template, but it is **strongly unrecommended**.
 
 In case of _two or more variables files_ processed with **disabled** combined mode, subdirectories inside *$outputDirBasePath*
 will be created. Names of those subdirectories will be delivered from original files' names that were processed.
 
-To summarize, if value of *$outputDirBasePath* is *C\\:Users\\<user_name>\Desktop* a file will be created at *C\\:Users\\<user_name>\Desktop\test-data\rendered.json*
+To summarize, if value of *$outputDirBasePath* is *C\\:Users\\<user_name>\Desktop* a file will be created at *C\\:Users\\<user_name>\Desktop\test-data\users.json*
 with following content:
 ```json
 {
   "usersAmount": 2,
   "users": [
     {
-      "ID": "1",
+      "ID": 1,
+      "Group ID": 2,
       "Name": "John",
       "Surname": "Doe",
       "Age": 26
     },
     {
-      "ID": "2",
+      "ID": 2,
+      "Group ID": 1,
       "Name": "Jane",
       "Surname": "Doe",
       "Age": 28
